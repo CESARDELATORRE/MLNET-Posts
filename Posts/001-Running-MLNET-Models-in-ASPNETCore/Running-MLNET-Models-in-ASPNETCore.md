@@ -27,9 +27,9 @@ If the provided text in the URL 'sentimentText' parameter was rude, then the % o
 SamplePrediction prediction = _modelEngine.Predict(sampleData);
 ```
 
-That's it. Very simple. A single line. The object _modelEngine will be injected in the controller's constructor or you custom class. 
+That's it. Very simple. A single line. The object _modelEngine will be injected into your WebAPI controller's constructor or into your custom class, so you just need to use it. 
 
-Internally, it will be optimized so the object dependencies are cached and shared across Http requests with minimum overhead when creating those objects.
+Internally, it will be optimized so the object dependencies are cached and shared across Http requests with minimized overhead when creating those objects.
 
 
 # Background on scalable and multithreaded ASP.NET Core services and apps
@@ -54,11 +54,11 @@ Usually, most of the code and objects you use in an ASP.NET Core WebAPI or app, 
 
 ![alt text](images/Transient-Objects-in-ASPNETCore-app.png "Multi-threads in ASP.NET Core apps")
 
-However, issues can happen if you use share objects across threads, for example by using [static member variables](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/static-classes-and-static-class-members#static-members) or [singleton lifetime](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-2.2#service-lifetimes) objects in Dependency Injection, as explained later on in this post.
+However, issues can happen if you share objects across threads, for example by using [static member variables](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/static-classes-and-static-class-members#static-members) or [singleton lifetime](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-2.2#service-lifetimes) objects in Dependency Injection, as explained later on in this post.
 
-# C# code needed to run an ML.NET model and predict
+# Minimum C# code needed to run an ML.NET model to make a single prediction
 
-As you can check out on may ML.NET getting started samples at the [ML.NET Samples GitHub repo](https://github.com/dotnet/machinelearning-samples), the basic code you need to load an already trained and serialized ML.NET model and predict with it (usually called 'ML model scoring code'), is the following:
+As you can check out on may ML.NET getting started samples at the [ML.NET Samples GitHub repo](https://github.com/dotnet/machinelearning-samples), the basic code you need for loading an already trained and serialized ML.NET model and do a single prediction with it (usually called 'ML model scoring code'), is the following:
 
 ```cs
 // (*Expensive*) Load ML model from serialized .zip file 
@@ -82,11 +82,11 @@ This code looks very atraightforward and simple to use. If you just copy that co
 
 However, the lines of code marked with `(*Expensive*)` in the comments are object instantiations that are significantly 'expensive', meaning that it takes significant time to execute such as a few hundred miliseconds per each call if usign small models (i.e. half a second), but that can increase significantly depending on the size of the ML model.
 
-## You need to improve your ML.NET model scoring code for scalable apps
+## You need to improve your ML.NET model scoring code when targeting scalable apps
 
-As you would initially think, improving that execution for an application that will run multiple predictions could be as simple as 'caching' the ML model (ITransformer) object and the Prediction Engine object, so those objects are instantiaoned just once and shared across the upcoming requests, right?
+As you would initially think, improving that execution for a multi-threaded application that will run multiple predictions could be as simple as 'caching' the ML model (`ITransformer`) object and the `PredictionEngine` object, so those objects are instantiaated just once and shared across the upcoming requests, right?
 
-Well, that is partially true, but there are important caveats here and this is the reason why I created this post, precisely. ;)
+Well, that is partially true, but there are important caveats here and this is the reason why I created this blog post, precisely. ;)
 
 
 # Sharing the ML model (ITransformer) across HTTP requests in ASP.NET Core 
@@ -154,14 +154,14 @@ If later on, you create a `PredictionEngine` object whenever you need to call `p
 
 This is approximately the approach taken by this ML.NET tutorial named [How-To: Serve Machine Learning Model Through ASP.NET Core Web API](https://docs.microsoft.com/en-us/dotnet/machine-learning/how-to-guides/serve-model-web-api-ml-net)
 
-However, you can do a lot better because with that approach it won't be optimized since whenever you get an Http request you'll be creating a new PredictionEngine object which, as previously mentioned, is a pretty 'expensive' operation for a scalable application if you want to have an optimized performance. 
+However, you can do a lot better because with that initial approach it won't be fully optimized since whenever you get an Http request you'll be creating a new `PredictionEngine` object which, as previously mentioned, is also a pretty 'expensive' operation for scalable applications. 
 
-For achieving the best performance in your application when predicting you will need, somehow, to cache the prediction engine object. But as mentioned, there are important caveats and problems here to solve.
+For achieving better performance in your application when predicting simultaneosuly from multiple threads (like when you handle multiple Http requests from many users) you will need, somehow, to cache the `PredictionEngine` object. But as mentioned, there are important caveats and problems here to solve.
 
 
 # The problem when running/scoring an ML.NET model in multi-threaded applications
 
-The problem running/scoring an ML.NET model in multi-threaded applications comes when you want to do single predictions with the PredictionEngine object and you want to cache that object (i.e. as Singleton) so it is being reused by multiple Http requests (therefore it would be accessed by multiple threads). That's is a problem because **the Prediction Engine is not thread-safe** ([ML.NET issue, Nov 2018](https://github.com/dotnet/machinelearning/issues/1718)).
+The problem when running/scoring an ML.NET model in multi-threaded applications comes when you want to do single predictions with the PredictionEngine object and you want to cache that object (i.e. as Singleton) so it is being reused by multiple Http requests (therefore it would be accessed by multiple threads). That's is a problem because **the Prediction Engine is not thread-safe** ([ML.NET issue, Nov 2018](https://github.com/dotnet/machinelearning/issues/1718)).
 
 Here's a diagram showing the important ML.NET classes you need to use, the dependecies between them and what kind of object lifetimes are recommended:
 
@@ -169,7 +169,7 @@ Here's a diagram showing the important ML.NET classes you need to use, the depen
 
 If you register the Prediction Engine object as Singleton or Static, you will get into trouble because it is not thread-safe.
 
-You could then think, okay, let's make it static but thread-safe with the [[ThreadStatic] attribute](https://docs.microsoft.com/en-us/dotnet/api/system.threadstaticattribute?view=netcore-2.2)? - Well, using the `[ThreadStatic]` attribute in ASP.NET apps is pretty dangerous. It might initially look that it is working, but write some async code (async/await) in your code and it'll probably stop working. Also, the mainstream approach for object's lifetime in ASP.NET Core is to use DI (Dependency Injection). Using static objects usage sometimes and DI other times would be very confusing, as well. 
+You could then think, okay, let's make it static while thread-safe with the [[ThreadStatic] attribute](https://docs.microsoft.com/en-us/dotnet/api/system.threadstaticattribute?view=netcore-2.2)? - Well, using the `[ThreadStatic]` attribute in ASP.NET apps is pretty dangerous. It might initially look that it is working, but write some async code (async/await) in your code and it'll probably stop working. Also, the mainstream approach for object's lifetime in ASP.NET Core is to use DI (Dependency Injection). Using static objects usage sometimes and DI other times would be very confusing, as well. 
 
 If you want to learn more about it, see [this discussion with David Fowler](https://github.com/aspnet/AspNetCore/issues/1371) recommending not to use `[ThreadStatic]` in ASP.NET Core apps.
 
@@ -302,7 +302,7 @@ The object pool class used is the [ObjectPool<T>](https://docs.microsoft.com/en-
 
 Meaning an object pool of `PredictionEngine` objects using generics so you can provide your particular `SampleObservation` and `SamplePrediction` data classes.  
 
-The object pool usage is pretty straightforward in the PRedict() method:
+The object pool usage is pretty straightforward in the Predict() method:
 
 ```cs
 public TPrediction Predict(TData dataSample)
@@ -326,13 +326,13 @@ public TPrediction Predict(TData dataSample)
 
 Basically, whenever the Predict() method is called, you take a PredictionEngine from the pool, use it to predict and then return it to the pool so it is available for any upcoming request.
 
-If there's not any PredictionEngine object available in the pool (that will happen the first time you use the pool or if under pressure with many Http requests), then the pool needs to create a additional PredictionEngine object.
+If there's not any PredictionEngine object available in the pool (that will happen the first time you use the pool or if under pressure with many Http requests), then the pool needs to create a PredictionEngine object.
 
-Basically, you have to solve the following question:
+Basically, you have now to solve the following question:
 
-*"How do you tell the object pool how the PredictionEngine object has to be created whenever a new instance is needed in the obejct pool?"*
+*"How do you tell the object pool how the PredictionEngine object has to be created whenever a new instance is needed in the object pool?"*
 
-You do that by using an ObjectPoolPolicy specified when creating the object pool in the `CreatePredictionEngineObjectPool()` method which is run once from the constructor, as in the following simplified code:
+You do that by using an ObjectPool *Policy* specified when creating the object pool in the `CreatePredictionEngineObjectPool()` method which is run once from the constructor, as in the following simplified code:
 
 ```cs
 private ObjectPool<PredictionEngine<TData, TPrediction>> CreatePredictionEngineObjectPool()
@@ -433,11 +433,11 @@ public class PredictorController : ControllerBase
 }
 ```
 
-With that, we achieved our original goal for making super simple to predict with an ML.NET model while having good performance with the implemented optimizations.
+With that, we achieved our original goal of *'making super simple to predict with an ML.NET model while having good performance in scalable ASP.NET Core apps'* thanks to the explained optimizations.
 
-Here's a high level end-to-end architecture diagram of the Web API using the MLModelEngine with the Object Pool of PredictionEngine objects.
 
-******** TBD *********
+Happy coding! :)
+
 
 # References
 
