@@ -2,7 +2,19 @@
 
 This posts explains how to optimize your code when running an ML.NET model on an ASP.NET Core WebAPI service, but the code is very similar when running it on an ASP.NET Core MVC or Razor web app.
 
-## Basic background on scalable and multithreaded ASP.NET Core services and apps
+# Goal
+
+**The goal is to be able to make predictions with an ML.NET model while optimizing the executions by sharing objects across Http requests and implementing very simple code when predicting**, like the following line of code that you could write on any ASP.NET Core controller's method or custom service class:
+
+```cs
+SamplePrediction prediction = _modelEngine.Predict(sampleData);
+```
+That's it. Very simple. A single line. The object _modelEngine will be injected in the controller's constructor or you custom class. 
+
+Internally, it will be optimized so the object dependencies are cached and shared across Http requests with minimum overhead when creating those objects.
+
+
+# Background on scalable and multithreaded ASP.NET Core services and apps
 
 ASP.NET Core services and apps are multithreaded applications so they can serve many HTTP requests at the same time.
 
@@ -133,7 +145,7 @@ For achieving the best performance in your application when predicting you will 
 
 The problem running/scoring an ML.NET model in multi-threaded applications comes when you want to do single predictions with the PredictionEngine object and you want to cache it (i.e. as Singleton or static) so it is being reused by multiple Http requests (therefore it would be accessed by multiple threads)  because **the Prediction Engine is not thread-safe** ([ML.NET issue, Nov 2018](https://github.com/dotnet/machinelearning/issues/1718)).
 
-Here's a diagram showing the important ML.NET classes you need to use:
+Here's a diagram showing the important ML.NET classes you need to use, the dependecies between them and what kind of object lifetimes are recommended:
 
 ![alt text](images/MLNET-classes-dependencies-for-scoring.png "ML.NET classes dependencies for scoring code with prediction engine")
 
