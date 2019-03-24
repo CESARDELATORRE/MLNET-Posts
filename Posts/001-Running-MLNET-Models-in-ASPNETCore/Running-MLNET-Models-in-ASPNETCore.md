@@ -1,14 +1,27 @@
-# Running ML.NET models on scalable ASP.NET Core WebAPIs or web apps
+# How to optimize and run ML.NET models on scalable ASP.NET Core WebAPIs or web apps
 
-This posts explains how to optimize your code when running an ML.NET model on an ASP.NET Core WebAPI service, but the code is very similar when running it on an ASP.NET Core MVC or Razor web app.
+## Context
+
+**This posts explains how to optimize your code when running an ML.NET model on an ASP.NET Core WebAPI service.** The code would be very similar when running it on an ASP.NET Core MVC or Razor web app, too.
 
 Eventually, this kind of optimized code might be provided as an *.NET Core Integration Package* comparable to integration packages targeting Entity Framework, SignalR, etc. so it'll be transparent and a lot easier for you.
 
-However, as of today (March 2019 with ML.NET 0.11 Preview), you can do the following implementation which, once done, is encapsulated in a single class that you can very easily re-use across your ASP.NET Core projects. 
+However, as of today (March 2019 with ML.NET 0.11 Preview), you can make the following implementation which, once done, is encapsulated in a single class that you can very easily re-use across your ASP.NET Core projects. 
+
+**ML.NET model used**: The ML.NET model used in this example is the  model you can train/create with the [Sentiment Analysis Getting Started sample](https://github.com/dotnet/machinelearning-samples/tree/master/samples/csharp/getting-started/BinaryClassification_SentimentAnalysis). But for your convenience, that model is already serialized as a .zip file and already available in this sample code which only focuses on how to better run/score a model in scalable apps.  
+
+**Model running on WebAPI**: Although the ML scenario is not really important in this case (execution optimization), the sample implemented is about running a Sentiment Analysis model on a WebAPI, as show in the following image:
+
+
+![alt text](images/Browser-WebAPI-screenshot.png "Browser with model execution screenshot")
+
+If the provided text in the URL 'sentimentText' parameter was rude, then the % of toxicity would be he high.
+
+**Show me the code**: The sample WebAPI and code explained in this blog post is published [here as an ML.NET Sample](https://github.com/dotnet/machinelearning-samples/tree/master/samples/csharp/end-to-end-apps/ScalableMLModelOnWebAPI)
 
 # Goal
 
-**The goal is to be able to make predictions with an ML.NET model while optimizing the executions by sharing objects across Http requests and implementing very simple code when predicting**, like the following line of code that you could write on any ASP.NET Core controller's method or custom service class:
+**The goal is to be able to make predictions with an ML.NET model while optimizing the executions by sharing objects across Http requests and implementing very simple code to be used by the user when predicting**, like the following line of code that you could write on any ASP.NET Core controller's method or custom service class:
 
 ```cs
 SamplePrediction prediction = _modelEngine.Predict(sampleData);
@@ -67,7 +80,7 @@ SamplePrediction predictionResult = predictionEngine.Predict(sampleData);
 
 This code looks very atraightforward and simple to use. If you just copy that code and run it on any application (console, desktop, web, etc.) it'll work okay. 
 
-However, the lines of code marked with `(*Expensive*)` in the comments are object instantiations that are significantly 'expensive', meaning that it takes significant time to execute such as 1 or 2 seconds per each call and that can vary depending on the size of the ML model.
+However, the lines of code marked with `(*Expensive*)` in the comments are object instantiations that are significantly 'expensive', meaning that it takes significant time to execute such as a few hundred miliseconds per each call if usign small models (i.e. half a second), but that can increase significantly depending on the size of the ML model.
 
 ## You need to improve your ML.NET model scoring code for scalable apps
 
@@ -148,7 +161,7 @@ For achieving the best performance in your application when predicting you will 
 
 # The problem when running/scoring an ML.NET model in multi-threaded applications
 
-The problem running/scoring an ML.NET model in multi-threaded applications comes when you want to do single predictions with the PredictionEngine object and you want to cache it (i.e. as Singleton or static) so it is being reused by multiple Http requests (therefore it would be accessed by multiple threads)  because **the Prediction Engine is not thread-safe** ([ML.NET issue, Nov 2018](https://github.com/dotnet/machinelearning/issues/1718)).
+The problem running/scoring an ML.NET model in multi-threaded applications comes when you want to do single predictions with the PredictionEngine object and you want to cache that object (i.e. as Singleton) so it is being reused by multiple Http requests (therefore it would be accessed by multiple threads). That's is a problem because **the Prediction Engine is not thread-safe** ([ML.NET issue, Nov 2018](https://github.com/dotnet/machinelearning/issues/1718)).
 
 Here's a diagram showing the important ML.NET classes you need to use, the dependecies between them and what kind of object lifetimes are recommended:
 
@@ -156,7 +169,11 @@ Here's a diagram showing the important ML.NET classes you need to use, the depen
 
 If you register the Prediction Engine object as Singleton or Static, you will get into trouble because it is not thread-safe.
 
-You could then think, okay, let's make it static but thread-safe with the [[ThreadStatic] attribute](https://docs.microsoft.com/en-us/dotnet/api/system.threadstaticattribute?view=netcore-2.2)? - Well, using the `[ThreadStatic]` attribute in ASP.NET apps is pretty dangerous. It might initially look that it is working, but write some async code (async/await) in your controllers and it'll probably stop working. Also, the mainstream approach for object's lifetime in ASP.NET Core is to use DI (Dependency Injection). Using static objects usage sometimes and DI other times would be very confusing, as well. 
+You could then think, okay, let's make it static but thread-safe with the [[ThreadStatic] attribute](https://docs.microsoft.com/en-us/dotnet/api/system.threadstaticattribute?view=netcore-2.2)? - Well, using the `[ThreadStatic]` attribute in ASP.NET apps is pretty dangerous. It might initially look that it is working, but write some async code (async/await) in your code and it'll probably stop working. Also, the mainstream approach for object's lifetime in ASP.NET Core is to use DI (Dependency Injection). Using static objects usage sometimes and DI other times would be very confusing, as well. 
+
+If you want to learn more about it, see [this discussion with David Fowler](https://github.com/aspnet/AspNetCore/issues/1371) recommending not to use `[ThreadStatic]` in ASP.NET Core apps.
+
+Other possible approaches could be to use [multi-threading synchronization primitives](https://docs.microsoft.com/en-us/dotnet/standard/threading/overview-of-synchronization-primitives) such as *critical sections*,  *locks*, *mutex*, etc., but those locks would create a bottleneck in your code which won't be optimized for high-scalable scenarios.
 
 # The solution: Use Object Pooling for PredictionEngine objects  
 
@@ -424,4 +441,10 @@ Here's a high level end-to-end architecture diagram of the Web API using the MLM
 
 # References
 
+[Dependency injection in ASP.NET Core](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection)
+
 [Managed threading best practices](https://docs.microsoft.com/en-us/dotnet/standard/threading/managed-threading-best-practices) 
+
+[Overview of synchronization primitives](https://docs.microsoft.com/en-us/dotnet/standard/threading/overview-of-synchronization-primitives)
+
+[Use the PredictionEngine to make one prediction at a time - ML.NET](https://docs.microsoft.com/en-us/dotnet/machine-learning/how-to-guides/single-predict-model-ml-net)
