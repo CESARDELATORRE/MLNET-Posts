@@ -21,7 +21,7 @@ If the provided text in the URL 'sentimentText' parameter was rude, then the % o
 
 # Goal
 
-**The goal is to be able to make predictions with an ML.NET model while optimizing the executions by sharing objects across Http requests and implementing very simple code to be used by the user when predicting**, like the following line of code that you could write on any ASP.NET Core controller's method or custom service class:
+**The goal is to be able to make predictions with an ML.NET model while optimizing the executions by sharing objects across Http requests and implementing code which should be very easy to use/consume by the user when predicting**, like the following line of code that you could write on any ASP.NET Core controller's method or custom service class:
 
 ```cs
 SamplePrediction prediction = _modelEngine.Predict(sampleData);
