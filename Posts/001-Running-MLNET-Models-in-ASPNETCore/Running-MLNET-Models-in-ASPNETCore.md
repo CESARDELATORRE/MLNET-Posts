@@ -154,7 +154,9 @@ Here's a diagram showing the important ML.NET classes you need to use, the depen
 
 ![alt text](images/MLNET-classes-dependencies-for-scoring.png "ML.NET classes dependencies for scoring code with prediction engine")
 
-If you register the Prediction Engine object as Singleton, you will get into trouble because it is not thread-safe.
+If you register the Prediction Engine object as Singleton or Static, you will get into trouble because it is not thread-safe.
+
+You could then think, okay, let's make it static but thread-safe with the [[ThreadStatic] attribute](https://docs.microsoft.com/en-us/dotnet/api/system.threadstaticattribute?view=netcore-2.2)? - Well, using the `[ThreadStatic]` attribute in ASP.NET apps is pretty dangerous. It might initially look that it is working, but write some async code (async/await) in your controllers and it'll probably stop working. Also, the mainstream approach for object's lifetime in ASP.NET Core is to use DI (Dependency Injection). Using static objects usage sometimes and DI other times would be very confusing, as well. 
 
 # The solution: Use Object Pooling for PredictionEngine objects  
 
