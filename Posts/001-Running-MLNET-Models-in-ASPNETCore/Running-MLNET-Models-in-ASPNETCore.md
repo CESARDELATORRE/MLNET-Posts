@@ -160,6 +160,8 @@ For achieving better performance in your application when predicting simultaneos
 
 # Approach B: Sharing PredictionEngine objects (Object Pooling based) across HTTP requests in ASP.NET Core 
 
+This approach requires some more coding and complexity (Object Pooling) for several reasons. So, before talking about its design and related implementation, let's talk about the problem to solve.
+
 ## The problem when running/scoring an ML.NET model in multi-threaded applications
 
 The problem when running/scoring an ML.NET model in multi-threaded applications comes when you want to do single predictions with the PredictionEngine object and you want to cache that object (i.e. as Singleton) so it is being reused by multiple Http requests (therefore it would be accessed by multiple threads). That's is a problem because **the Prediction Engine is not thread-safe** ([ML.NET issue, Nov 2018](https://github.com/dotnet/machinelearning/issues/1718)).
