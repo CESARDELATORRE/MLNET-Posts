@@ -89,7 +89,7 @@ As you would initially think, improving that execution for a multi-threaded appl
 Well, that is partially true, but there are important caveats here and this is the reason why I created this blog post, precisely. ;)
 
 
-# Sharing the ML model (ITransformer) across HTTP requests in ASP.NET Core 
+# Approach A: Sharing the ML model (ITransformer) across HTTP requests in ASP.NET Core 
 
 Therefore, the first optimization you could do would be to cache in memory the ML model object that you loaded from the .zip file, so it can be re-used across many Http requests.
 
@@ -158,8 +158,9 @@ However, you can do a lot better because with that initial approach it won't be 
 
 For achieving better performance in your application when predicting simultaneosuly from multiple threads (like when you handle multiple Http requests from many users) you will need, somehow, to cache the `PredictionEngine` object. But as mentioned, there are important caveats and problems here to solve.
 
+# Approach B: Sharing PredictionEngine objects (Object Pooling based) across HTTP requests in ASP.NET Core 
 
-# The problem when running/scoring an ML.NET model in multi-threaded applications
+## The problem when running/scoring an ML.NET model in multi-threaded applications
 
 The problem when running/scoring an ML.NET model in multi-threaded applications comes when you want to do single predictions with the PredictionEngine object and you want to cache that object (i.e. as Singleton) so it is being reused by multiple Http requests (therefore it would be accessed by multiple threads). That's is a problem because **the Prediction Engine is not thread-safe** ([ML.NET issue, Nov 2018](https://github.com/dotnet/machinelearning/issues/1718)).
 
@@ -175,7 +176,7 @@ If you want to learn more about it, see [this discussion with David Fowler](http
 
 Other possible approaches could be to use [multi-threading synchronization primitives](https://docs.microsoft.com/en-us/dotnet/standard/threading/overview-of-synchronization-primitives) such as *critical sections*,  *locks*, *mutex*, etc., but those locks would create a bottleneck in your code which won't be optimized for high-scalable scenarios.
 
-# The solution: Use Object Pooling for PredictionEngine objects  
+## The solution: Use Object Pooling for PredictionEngine objects  
 
 Since a PredictionEngine object cannot be singleton because it is not 'thread safe', a good solution for being able to have 'ready to use' PredictionEngine objects  is to use an object pooling-based approach.
 
