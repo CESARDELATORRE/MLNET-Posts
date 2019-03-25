@@ -1,0 +1,6 @@
+
+Check my blog post and sample on 'How to optimize and run ML.NET models on scalable ASP.NET Core WebAPIs or web apps'
+
+https://devblogs.microsoft.com/cesardelatorre/how-to-optimize-and-run-ml-net-models-on-scalable-asp-net-core-webapis-or-web-apps/ 
+
+#mlnet #dotnetcore #aspnetcore
