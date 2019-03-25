@@ -435,6 +435,11 @@ public class PredictorController : ControllerBase
 
 With that, we achieved our original goal of *'making super simple to predict with an ML.NET model while having good performance in scalable ASP.NET Core apps'* thanks to the explained optimizations.
 
+To recap, here's a high level end-to-end architecture diagram of the Web API using the MLModelEngine with the Object Pool of PredictionEngine objects.
+
+![alt text](images/WebAPI-MLModelEngine-Architecture.png "End-to-end-simplified-architecture")
+
+Feel free to provide your feedback if you implement this approach in your end-user applications.
 
 Happy coding! :)
 
