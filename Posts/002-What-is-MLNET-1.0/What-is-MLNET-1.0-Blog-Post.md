@@ -71,7 +71,7 @@ Here's a high-level diagram with multiple possible application architectures whe
 
 ![Application Architecture diagram](MLNET-Blog-Post-images/application-architecture-mlnet.png "ML.NET Value proposition")
 
-(*) Note that even when you can run ML.NET on Blazor client, since it is .NET code, if browser running the web app is a mobile device (ARM processor: iOS/Android), the ML.NET model won't run in the client, only if the browser runs on x64/x86 devices. 
+(*) Note that even when with Blazor you can run ML.NET on the browser (because with Blazor client you can run .NET assemblies and code on the browser), if the browser running the web app is on a mobile device (ARM processor: iOS/Android), the ML.NET model won't run. ML.NET 1.0 will run only if the browser runs on x64/x86 devices. 
 
 There might be additional architecture possibilities, but those are probably the most common.
 
@@ -376,6 +376,13 @@ You can find and end-to-end WebAPI sample running an ML.NET model by using the M
 
 - [ASP.NET Core WebAPI sample optimized for scalability and performance when runnig/scoring an ML.NET model](https://github.com/dotnet/machinelearning-samples/tree/master/samples/csharp/end-to-end-apps/ScalableMLModelOnWebAPI-IntegrationPkg)
 
+# Positioning ML.NET with other ML frameworks
+
+If you are looking for any comparison with other existing ML frameworks, I'd say that  **Scitkit-Learn** (Python-based) is probably the framework with most similar machine learning capabilities. Scitkit-Learn is a great ML framework for Python developers that also runs on Microsoft platforms such as Azure.
+
+The biggest difference lays on the fact that ML.NET is "native .NET" and targets .NET developers primarily. 
+
+ML.NET also provides **bindings for Python** (named **[NimbusML](https://docs.microsoft.com/en-us/nimbusml/overview)**) which is currently an experimental solution. This is a collateral scenario that can be useful for data scientists working on Python and collaborating with .NET developers through the same ML.NET models. But, as previously mentioned, ML.NET targets .NET developers as the main user or 'persona'.
 
 # Get started with ML.NET 1.0!
 
