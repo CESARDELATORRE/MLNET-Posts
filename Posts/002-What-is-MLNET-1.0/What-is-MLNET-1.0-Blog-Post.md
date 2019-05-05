@@ -115,7 +115,7 @@ All these scenarios and many more can be mapped to the following **ML Tasks** yo
 - Anomaly Detection and Time Series
 - Clustering
 - Ranking
-- Deep Learning (Integration with TensorFlow and ONNX models)
+- Computer Vision in Deep Learning (Integration with TensorFlow and ONNX models)
 
 
 # Production ready
@@ -146,7 +146,7 @@ The high level machine learning process using ML.NET can be simplified as the fo
 
 ![alt text](MLNET-Blog-Post-images/ml-process-2.png "ML process")
 
-You can see how there are two very differenciated workflows:
+You can see how there are two very differentiated workflows:
 
 - Cyclic workflow to create/train/evaluate the ML model based on historic data. When you are happy with the model's quality, you save it as a serialized ML.NET model file (.zip format).
 
