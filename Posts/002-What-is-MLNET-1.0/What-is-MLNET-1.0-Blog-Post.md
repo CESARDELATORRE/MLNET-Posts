@@ -406,3 +406,4 @@ Thanks and happy coding with [ML.NET](http://dot.net/ml)!
 *.NET product group*
 
 *Microsoft Corp.*
+
