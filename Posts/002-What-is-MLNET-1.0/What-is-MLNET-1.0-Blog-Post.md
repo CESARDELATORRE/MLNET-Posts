@@ -2,7 +2,7 @@
 
 ![alt text](MLNET-Blog-Post-images/mldotnet.png "ML.NET logo")
 
- Today, coinciding with the //BUILD 2019/ conference, we’re thrilled by launching [ML.NET](http://dot.net/ml) 1.0 release! 
+ Today, coinciding with //BUILD 2019/ conference, we’re thrilled by launching [ML.NET](http://dot.net/ml) 1.0 release! 
  
  You can read the [official ML.NET 1.0 release Blog Post here](https://aka.ms/mlnet1-announcement-blog-post) and get started at the [ML.NET  site here](https://dotnet.microsoft.com/apps/machinelearning-ai/ml-dotnet). 
 
