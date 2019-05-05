@@ -2,7 +2,13 @@
 
 ![alt text](MLNET-Blog-Post-images/mldotnet.png "ML.NET logo")
 
- Today, coinciding with //BUILD 2019/ conference, we’re thrilled by launching [ML.NET](http://dot.net/ml) 1.0 release! This is the first main milestone of a great journey in the open that started on [May 2018 when we released ML.NET 0.1 as open source](https://blogs.msdn.microsoft.com/dotnet/2018/05/07/introducing-ml-net-cross-platform-proven-and-open-source-machine-learning-framework/). Since then we've been releasing monthly, 12 preview releases plus this final 1.0 release, as shown in the roadmap below:
+ Today, coinciding with //BUILD 2019/ conference, we’re thrilled by launching [ML.NET](http://dot.net/ml) 1.0 release! 
+ 
+ You can read the [official ML.NET 1.0 release Blog Post here](https://aka.ms/mlnet1-announcement-blog-post) and get started at the [ML.NET  site here](https://dotnet.microsoft.com/apps/machinelearning-ai/ml-dotnet). 
+
+ In this blog post I'm providing quite a few additional technical details along with my personal vision that you might find interesting, though. 
+ 
+ This is the first main milestone of a great journey in the open that started on [May 2018 when we released ML.NET 0.1 as open source](https://blogs.msdn.microsoft.com/dotnet/2018/05/07/introducing-ml-net-cross-platform-proven-and-open-source-machine-learning-framework/). Since then we've been releasing monthly, 12 preview releases plus this final 1.0 release, as shown in the roadmap below:
 
 ![alt text](MLNET-Blog-Post-images/all-mlnet-versions-till-v1.png "ML.NET past roadmap")
 
@@ -403,7 +409,7 @@ Thanks and happy coding with [ML.NET](http://dot.net/ml)!
 
 *Principal Program Manager*
 
-*.NET product group*
+*.NET and ML.NET product group*
 
 *Microsoft Corp.*
 
