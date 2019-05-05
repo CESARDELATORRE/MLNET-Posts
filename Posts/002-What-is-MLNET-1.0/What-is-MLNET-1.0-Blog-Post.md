@@ -257,7 +257,11 @@ After that CLI execution, you get the serialized ML.NET model in a .zip file plu
 
 In that generated C# code you get the model consumption code that you can directly use in your end-user application to make predictions. That code is very similar to the three lines explained above for running/scoring a model, but in this case the code is running your own generated ML model.
 
-In addition and for more advanced leearning, you also get the C# training code that was used to train the model by the CLI tool so you can research that code, as well.  
+In addition and for more advanced leearning, you also get the C# training code that was used to train the model by the CLI tool so you can research that code, as well. 
+
+### See also
+
+Explore this complete [sample using the CLI here](https://github.com/dotnet/machinelearning-samples/tree/master/samples/CLI/BinaryClassification_CLI).
 
 # ML.NET Model Builder for Visual Studio - Preview
 
@@ -302,6 +306,10 @@ In the previous code using AutoML you can observe that you don't need to select 
 You simply provide the data, specify the type of ML task experiment, and that's all.
 
 Then, the prediction execution using the generated model would be the same code as when simply using ML.NET to run a model in the previous ML.NET sample.
+
+### See also
+
+See a [sample using the AutoML API here](https://github.com/dotnet/machinelearning-samples/tree/master/samples/csharp/getting-started/BinaryClassification_AutoML).
 
 # Running your models on ASP.NET Core web apps and services
 
