@@ -4,7 +4,7 @@
 
  Today, coinciding with //BUILD 2019/ conference, we’re thrilled by launching [ML.NET](http://dot.net/ml) 1.0 release! 
  
- You can read the [official ML.NET 1.0 release Blog Post here](https://aka.ms/mlnet1-announcement-blog-post) and get started at the [ML.NET  site here](https://dotnet.microsoft.com/apps/machinelearning-ai/ml-dotnet). 
+ You can read the [official ML.NET 1.0 release announcement Blog Post here](https://aka.ms/mlnet1-announcement-blog-post) and get started at the [ML.NET  site here](https://dotnet.microsoft.com/apps/machinelearning-ai/ml-dotnet). 
 
  In this blog post I'm providing quite a few additional technical details along with my personal vision that you might find interesting, though. 
  
