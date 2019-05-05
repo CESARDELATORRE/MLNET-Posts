@@ -154,6 +154,7 @@ You can see how there are two very differentiated workflows:
 
 The ML.NET NuGet packages runs on all those processes, as shown in the diagram. Since ML.NET is a framework, you can run it on the environment and application type you want. 
 
+
 ## Getting Started Installation
 
 You can follow the official guided ['ML.NET Getting started Tutorial'](). However, below I'm highlighting the main steps to take into account and common C# code to use.
