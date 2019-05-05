@@ -18,7 +18,7 @@ The diagram above shows the the development in the open of ML.NET, however, as e
 
 [ML.NET](http://dot.net/ml) is an **open-source** and **cross-platform** machine learning framework (Windows, Linux, macOS), created by Microsoft, **for .NET developers**. 
 
-Using [ML.NET](http://dot.net/ml), developers can leverage their existing tools and skillsets to develop and infuse custom AI into their applications by creating **custom machine learning models** for common scenarios like *Sentiment Analysis, Recommendation, Image Classification* and many more!.
+Using [ML.NET](http://dot.net/ml), developers can leverage their existing tools and skillsets to develop and infuse custom AI into their applications by creating **custom machine learning models** for common scenarios like *Sentiment Analysis, Product Recommendation, Sales forecasts, Price Predictions, Customers Segmentation, Image Classification* and many more!.
 
 
 ![alt text](MLNET-Blog-Post-images/value-props-mlnet.png "ML.NET Value proposition")
