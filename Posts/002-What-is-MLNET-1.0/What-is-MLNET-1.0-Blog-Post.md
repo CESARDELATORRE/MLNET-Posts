@@ -217,6 +217,8 @@ var resultprediction = predEngine.Predict(sampleComment);
 
 From the resultPrediction object you can get the actual `Prediction` (in this case `PositiveSentiment = true/false`) and the `Probability`.
 
+**Important:** If you want to run your model on a **scalable** and **multi-threaded application** such as an **ASP.NET Core web app or WebAPI service**, please use the recommended approach explained in the section below named **'Running your ML models on ASP.NET Core web apps and services'.**
+
 
 # ML.NET Tools and Extensions (in Preview)
 
@@ -311,7 +313,7 @@ Then, the prediction execution using the generated model would be the same code 
 
 See a [sample using the AutoML API here](https://github.com/dotnet/machinelearning-samples/tree/master/samples/csharp/getting-started/BinaryClassification_AutoML).
 
-# Running your models on ASP.NET Core web apps and services
+# Running your ML models on ASP.NET Core web apps and services
 
 When scaling out and running your models on multi-threaded applications, the way you should run your models for executing predictions should be implemented in a slightly different way so it is optimized for multi-threaded environments. The problem is explained in detail in this blog post I wrote: 
 
