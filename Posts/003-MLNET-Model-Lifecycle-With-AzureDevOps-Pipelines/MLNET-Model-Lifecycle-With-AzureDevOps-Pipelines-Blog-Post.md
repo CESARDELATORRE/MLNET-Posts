@@ -112,7 +112,7 @@ I published this Azure DevOps publicly as READ-ONLY, so you can also see how it 
 
 Note that for the "first look" above I'm showing a visual "task-based" CI pipeline because it is clearer and more visual for a first quick look, but in the upcoming detailed steps we switch to a YAML pipeline (**Azure-Pipelines.yaml**) because it offers better tracking with its related source code since the .YAML file is also checked in and pushed into the same Git repo used for the artifacts source code.
 
-# The CD pipeline in Azure DevOps 
+# The CD pipeline in Azure DevOps (YAML approach)
 
 This is pretty much the same build pipeline but using YAML as a **Azure-Pipelines.yaml** file, which you can also see published at my GitHub repo here:
 
