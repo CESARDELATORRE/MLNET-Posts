@@ -477,7 +477,16 @@ You can investigate these real deployments live in my READ-ONLY Azure DevOps pro
 - [Release Pipelines for ML model in WebAPI](https://dev.azure.com/mlnetsamples/MLNETWebAPISample/_release?view=mine&definitionId=1)
 
 
-# Try the CI/CD pipelines with "bad data" that shouldn't be used to generate an ML  model
+# Trigger the CI/CD pipelines to train/build/deploy a new ML Model by simply providing new data 
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+TBD
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+# Try/stop the CI/CD pipelines with "bad data" that shouldn't be used to generate an ML  model
 
 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
