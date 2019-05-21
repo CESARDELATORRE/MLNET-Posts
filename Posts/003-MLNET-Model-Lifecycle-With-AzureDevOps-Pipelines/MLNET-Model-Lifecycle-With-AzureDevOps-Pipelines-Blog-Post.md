@@ -477,13 +477,33 @@ You can investigate these real deployments live in my READ-ONLY Azure DevOps pro
 - [Release Pipelines for ML model in WebAPI](https://dev.azure.com/mlnetsamples/MLNETWebAPISample/_release?view=mine&definitionId=1)
 
 
+# Try the CI/CD pipelines with "bad data" that shouldn't be used to generate an ML  model
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+TBD
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+# Additional space for improvements
+
+These Azure DevOps pipelines including the ML.NET model lifecycle is a simplified and minimum baseline you can use to get started. However, there are multiple areas of improvement here when dealing with more advanced scenarios:
+
+- Load training data from larger files in Azure Files instead of small/medium dataset files in GitHub
+- Load training data from a SQL/relational database in Azure
+- ML Model Versioning: Set a version per each model created and decouple the ML lifecycle from the application lifecycle.
+- Integration with Azure ML and MLFlow  
+
+I might write additional Blog Posts on those topics extending the working areas started from this current blog post towards new possibilities for more advanced scenarios.
+
+
+
 # Get started with ML.NET 1.0!
 
-![alt text](MLNET-Blog-Post-images/get-started-rocket.png "Get started icon")
+![alt text](images/get-started-rocket.png "Get started icon")
 
-This current blog post is providing significant technical details. For a simpler ML.NET 1.0 release announcement, check out the [official ML.NET 1.0 announcement Blog Post here](https://aka.ms/mlnet1-announcement-blog-post).
-
-Get started with ML.NET by exploring the following resources:
+If you still don't know ML.NET, get started by exploring the following resources:
 
   * **Get started** with <a href="https://www.microsoft.com/net/learn/apps/machine-learning-and-ai/ml-dotnet/get-started">ML.NET here</a>. 
   * **Tutorials** and resources at the [Microsoft Docs ML.NET Guide](https://docs.microsoft.com/en-us/dotnet/machine-learning/)
