@@ -83,9 +83,9 @@ You can also explore a very similar WebAPI implementation running an ML.NET mode
 
 Having the ML model, trainer console app and final app/service to deploy the model to, let's now drill down on the different CI/CD pipelines in Azure DevOps and learn multiple approaches you can implement.
 
-# The CI pipeline in Azure DevOps including the ML.NET Model lifecycle
+# Build pipeline in Azure DevOps including the ML.NET Model lifecycle
 
-The CI (Continuous Integration) pipeline is pretty similar to regular application CI pipelines, but you need to add the following steps:
+The Build pipeline for machine Learning is pretty similar to regular application Build pipelines, but you need to add the following steps:
 
 - Build/compile the ML model trainer app (Usually a console app)
 - Run the process (console app) to train the ML.NET model and generate the serialized model (.zip file).
@@ -96,12 +96,12 @@ Once you run those tasks in the CI pipeline then you'd follow the typical applic
 
 - Build/compile the end-user app (such as an ASP.NET Core web app or WebAPI service)
 - Run app's unit tests and integration tests
-- Generate and publish the final deployment artifact in Azure DevOps (or if using containers, generate a Docker image and publish it into a Docker Registry)
+- Generate and publish the final pipeline artifact in Azure DevOps (or if using containers, generate a Docker image and publish it into a Docker Registry)
 
 Here's a screenshot of a simplified approach of an Azure DevOps CI pipeline including all those steps.
 
 
-**Azure DevOps CI pipeline (Visual tasks approach)**
+**Azure DevOps Build pipeline (Visual tasks approach)**
 
 ![Azure DevOps CI pipeline (Visual tasks approach)](images/azure-devops-pipeline-visual-tasks.png)
 
@@ -112,9 +112,15 @@ I published this Azure DevOps publicly as READ-ONLY, so you can also see how it 
 
 Note that for the "first look" above I'm showing a visual "task-based" CI pipeline because it is clearer and more visual for a first quick look, but in the upcoming detailed steps we switch to a YAML pipeline (**Azure-Pipelines.yaml**) because it offers better tracking with its related source code since the .YAML file is also checked in and pushed into the same Git repo used for the artifacts source code.
 
-# The CD pipeline in Azure DevOps (YAML approach)
+## Build pipeline in Azure DevOps (YAML approach) to build and deploy the ML.NET model
 
-This is pretty much the same build pipeline but using YAML as a **Azure-Pipelines.yaml** file, which you can also see published at my GitHub repo here:
+In order to get started with Azure DevOps and Azure pipelines (YAML-based) and link it with your source code in GitHub, check this simple tutorial:
+
+- [Create your first pipeline](https://docs.microsoft.com/en-us/azure/devops/pipelines/create-first-pipeline?view=azure-devops&tabs=tfs-2018-2)
+
+Once you have an empty Azure pipeline, you can start implementing it as the following.
+
+This is pretty much the same build pipeline than the previous one but in this case it is using YAML as a **Azure-Pipelines.yaml** file, which you can also see published at my GitHub repo here:
 
 https://github.com/CESARDELATORRE/MLNETSENTIMENTCICD/blob/master/azure-pipelines.yml
 
@@ -175,15 +181,300 @@ steps:
     targetPath: '$(Build.ArtifactStagingDirectory)'
 ```
 
-Initially, all the .YAML code can look a bit overwhelming compared to the visual tasks, but once you know the tasks you are running, the .YAML approach is much more direct and in a single scan/read you see everything the pipeline is running. On the other hand, if using the visual tasks you'd need to enter on each task and review all its parameters sometimes in hidden/closed tabs, etc.  Really, once you are used to use it, you will prefer the .YAML approach not counting the best benefit which is that you are checking the YAML file in the same repo than its related source code! :)\ 
+Initially, all the .YAML code can look a bit overwhelming compared to the traditional VSTS visual tasks, but once you know the tasks you are running, the .YAML approach is much more direct and in a single scan/read you see everything the pipeline is running. On the other hand, if using the visual tasks you'd need to enter on each task and review all its parameters sometimes in hidden/closed tabs, etc.  Really, once you are used to use it, you will prefer the .YAML approach not counting the best benefit which is that you are checking the YAML file in the same repo than its related source code! :)
 
-Let's drill down in the 
-CD (Continuous Deployment) pipeline
+Let's drill down on each task.
+
+### Enable CI (Continuous Integration) in your build pipeline
+
+What we want to do it to trigger a new build whenever any code/file has been pushed into the Git repo.
+
+This is done by simply adding the following code at the begining the .YAML file which is this case is doing that only for files pushed into the master branch:
+
+```yaml
+trigger:
+- master
+```
+
+### Specify type of Agent pool (VM type to run the pipeline)
+
+Since the apps to run in this case are .NET Core, the agents/VMs can be Windows or Linux.
+In this case I selected Linux (Ubuntu) but in the visual task pipeline I was using Windows-based agents.
+
+```yaml
+pool:
+  vmImage: 'ubuntu-latest'
+```
+
+### Set pipeline variables
+
+You can set for later usage any variable. In this case I'm using a variable for the current build configuration set as 'Release'.
+
+```yaml
+variables:
+  buildConfiguration: 'Release'
+```
+
+This variable is used in most of the rest tasks of the pipeline.
+
+### Build the model trainer console app
+
+As part of the pipeline steps or tasks, we first build the console app for training the model:
+
+```yaml
+steps:
+
+- script: dotnet build MLModel.Train/SentimentModel/SentimentModel.ConsoleApp/SentimentModel.ConsoleApp.csproj --configuration $(buildConfiguration)
+  displayName: 'Build Trainer Console App (dotnet build) $(buildConfiguration)'
+```
+
+Nothing special here, you just need to provide the path to the console project.
+
+### Create/Train the ML model
+
+This is an important step. In order to create/train the ML model in this case you just need to run the trainer console app making sure it is running the model training code [here](https://github.com/CESARDELATORRE/MLNETSENTIMENTCICD/blob/master/MLModel.Train/SentimentModel/SentimentModel.ConsoleApp/Program.cs#L29). 
+
+```csharp
+ModelBuilder.CreateModel();
+```
+
+That custom `CreateModel()` method has the ML.NET model definition (data transformations, chosen algorithm, etc.) implemented [here](https://github.com/CESARDELATORRE/MLNETSENTIMENTCICD/blob/master/MLModel.Train/SentimentModel/SentimentModel.ConsoleApp/ModelBuilder.cs#L27) but I'm not going to explain tha code since you can learn about it in other tutorials like this [Tutorial: Analyze sentiment of comments with binary classification in ML.NET](https://docs.microsoft.com/en-us/dotnet/machine-learning/tutorials/sentiment-analysis) and in any case that code can was also generated by the ML.NET CLI as previously mentioned.
+
+The point is that this code trains and creates a new ML model and serializes it as a new **MLModel.zip** file [here](https://github.com/CESARDELATORRE/MLNETSENTIMENTCICD/tree/master/MLModel.Train/SentimentModel/SentimentModel.Model).
+
+Then, the task to simply run the trainer console app from Azure DevOps is the following:
+
+```yaml
+- script: dotnet run --project MLModel.Train/SentimentModel/SentimentModel.ConsoleApp/SentimentModel.ConsoleApp.csproj --configuration $(buildConfiguration)
+  displayName: 'Train ML model (dotnet run)'
+```
+
+Pretty straight forward, you just run 'dotnet run' against the console project, that will train/generate the .zip model file.
+
+You could also run its compiled .dll with a different taks such as the following:
+
+```yaml
+- task: DotNetCoreCLI@2
+  displayName: 'Train ML model'
+  inputs:
+    command: custom
+    custom: SentimentModel.ConsoleApp.dll
+    workingDirectory: MLModel.Train/SentimentModel/SentimentModel.ConsoleApp/bin/Release/netcoreapp2.1
+```
+
+But I chose 'dotnet run' with the Script task, instead.
 
 
+### Run model validation tests
+
+In addition to Unit Tests that you could have for your application, when implementing an ML model you need *tests in the build pipeline* so you can *validate the quality of the model*.
+
+**This is a critical step** because **if the model's quality tests are not passed then you will stop/break the build** since you don't want to generate and deploy a new model which is not good enough.
+
+For that, you simply run a Unit Test Project type from a task like the following:
+
+```yaml
+- task: DotNetCoreCLI@2
+  displayName: 'Run Unit Tests using trained ML model'
+  inputs:
+    command: test
+    projects: '**/UnitTests.csproj'
+    arguments: '--configuration $(buildConfiguration)'
+```
+
+After running this task from the Azure DevOps pipeline, you should be able to see the results in the pipeline execution dashboard, such as the following screenshot:
+
+![Azure DevOps Tests Visualization](images/azure-devops-test-results-visualization.png)
 
 
+Getting into the tests source coe, that Test project has interesting tests like the following:
 
+**1. Simplest Unit Tests testing that a positive comment is predicted as 'positive sentiment':**
+
+```csharp
+[Test]
+public void TestPositiveSentimentStatement()
+{
+    ModelInput sampleStatement = new ModelInput { Text = "ML.NET is awesome!" };
+
+    var predEngine = _mlContext.Model.CreatePredictionEngine<ModelInput, ModelOutput>(_trainedModel);
+
+    var resultprediction = predEngine.Predict(sampleStatement);
+
+    Assert.AreEqual(true, Convert.ToBoolean(resultprediction.Prediction));
+}
+```
+
+Pretty straightforward, no need to explain.
+
+**2. Test with code for model's quality/accuracy evaluation:**
+
+This is probably the most important and interesting test since you can say *"Fail this test if the model's accuracy is not higher than 85%"*, for instance, with a test source code similar to the following:
+
+```csharp
+[Test]
+public void TestAccuracyHigherThan60()
+{
+    Console.WriteLine("===== Evaluating Model's accuracy with Evaluation/Test dataset =====");
+            
+    // Read dataset to get a single row for trying a prediction          
+    IDataView testDataView = _mlContext.Data.LoadFromTextFile<ModelInput>(
+                                    path: GetAbsolutePath(EVALUATION_DATA_FILEPATH),
+                                    hasHeader: true,
+                                    separatorChar: '\t');
+
+    IEnumerable<ModelInput> samplesForPrediction = _mlContext.Data.CreateEnumerable<ModelInput>(testDataView, false);
+
+    //DO BULK PREDICTIONS
+    IDataView predictionsDataView = _trainedModel.Transform(testDataView);
+
+    var predictions = _trainedModel.Transform(testDataView);
+    var metrics = _mlContext.BinaryClassification.Evaluate(data: predictionsDataView, labelColumnName: "sentiment", scoreColumnName: "Score");
+
+    double accuracy = metrics.Accuracy;
+    Console.WriteLine($"Accuracy of model in this validation '{accuracy*100}'%");
+            
+    Assert.GreaterOrEqual(0.80, accuracy);
+}
+```
+
+
+**3. Generate many Tests from a file with sample data to test**
+
+You can also generate hundreds of unit tests based on a test dataset with code like the following:
+
+```csharp
+        //Generate many test cases with a bulk prediction approach
+        public static List<TestCaseData> TestCases
+        {
+            get
+            {
+                MLContext mlContext = new MLContext();
+                ITransformer trainedModel = mlContext.Model.Load(GetAbsolutePath(MODEL_FILEPATH), out var modelInputSchema);
+
+                // Read dataset to get a single row for trying a prediction          
+                IDataView testDataView = mlContext.Data.LoadFromTextFile<ModelInput>(
+                                                path: GetAbsolutePath(UNIT_TEST_DATA_FILEPATH),
+                                                hasHeader: true,
+                                                separatorChar: '\t');
+
+                IEnumerable<ModelInput> samplesForPrediction = mlContext.Data.CreateEnumerable<ModelInput>(testDataView, false);
+                ModelInput[] arraysamplesForPrediction = samplesForPrediction.ToArray();
+
+                //DO BULK PREDICTIONS
+                IDataView predictionsDataView = trainedModel.Transform(testDataView);
+                IEnumerable<ModelOutput> predictions = mlContext.Data.CreateEnumerable<ModelOutput>(predictionsDataView, false);
+                ModelOutput[] arrayPredictions = predictions.ToArray();
+
+                var TestCases = new List<TestCaseData>();
+
+                for (int i = 0; i < arraysamplesForPrediction.Length; i++)
+                {
+                    TestCases.Add(new TestCaseData(arraysamplesForPrediction[i].Text,
+                                                   arrayPredictions[i].Prediction,
+                                                   arraysamplesForPrediction[i].Sentiment));
+                }
+
+                return TestCases;
+            }
+        }
+
+        [TestCaseSource("TestCases")]
+        public void TestSentimentStatement(string sampleText, bool predictedSentiment, bool expectedSentiment)
+        {
+            try
+            {
+                Console.WriteLine($"Text {sampleText} predicted as {predictedSentiment} should be {expectedSentiment}");
+                Assert.AreEqual(predictedSentiment, expectedSentiment);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+```
+
+Then, you would also be able to see all those single tests in Visual Studio:
+
+![Tests in Visual Studio](images/test-in-visual-studio.png)
+
+
+And of course you can also see all those tests from Azure DevOps dashboard:
+
+![Detailed Tests in Azure DevOps](images/azure-devops-test-results-visualization-details.png)
+
+If your build pipeline passes all the tests you defined, than you are good to go and deploy the just trained/built ML.NET model.
+
+### Copy/Deploy the model .zip file into the WebAPI service project
+
+Once you are happy with the quality of the model, you want to deploy it into your end-user application. In this case it is a simple ASP.NET Core WebAPI service, but it could also be a whole ASP.NET Core Razor or MVC web app or any .NET Core or .NET Framework app.
+
+In this case you just need to copy the new model. zip file into the end-user application project, so the .zip file will be deployed as a resource of the application when the application is built later on.
+
+For copying the .zip file you simply run a `CopyFiles` task like the following:
+
+```yaml
+- task: CopyFiles@2
+  displayName: 'Copy ML model file from Trainer app to WebAPI app'
+  inputs:
+    SourceFolder: 'MLModel.Train/SentimentModel/SentimentModel.Model'
+    Contents: 'MLModel.zip'
+    TargetFolder: 'Scalable.WebAPI/ML'
+    OverWrite: true
+```
+
+### Build your end-user application and publish it as a pipeline artifact (or Docker container as an alternative)
+
+Once the end-user application is ready with the new ML.NET model, the rest of the steps are not really related to ML but with regular Azure DevOps tasks, such as the following:
+
+```yaml
+- task: DotNetCoreCLI@2
+  displayName: 'Generate WebAPI binaries (dotnet publish)'
+  inputs:
+    command: publish
+    publishWebProjects: false
+    projects: Scalable.WebAPI/Scalable.WebAPI.csproj
+    arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+    modifyOutputPath: false
+
+- task: PublishPipelineArtifact@0
+  displayName: 'Publish WebAPI as pipeline artifact'
+  inputs:
+    artifactName: MLNETWebAPI
+    targetPath: '$(Build.ArtifactStagingDirectory)'
+```
+In this case, since it is a plain ASP.NET Core WebAPI service, I'm just publishing it as a pipeline artifact so I can later grab it from the *Release Pipeline*.
+
+If the app/service is based on containers, I would then create a Docker image and publish it into a Docker Registry instead of as a pipeline artifact. But this is not the case for this example.
+
+For additional info on pipeline artifacts and its relationship with *Release Pipelines*, check this article:
+
+- [Release artifacts and artifact sources](https://docs.microsoft.com/en-us/azure/devops/pipelines/release/artifacts?view=azure-devops)
+
+# Release Pipelines and CD (Continuous Deployment)
+
+The Release Pipeline in this example deploys the WebAPI into **Azure App Service**. That is dealing only with the final end-user application (in this case the ASP.NET Core WebAPI service) being deployed into QA/Production environments in Azure. 
+
+Therefore, since in this case there's nothing special about ML (Machine Learning) I'm just showcasing it with a few screenshots.
+
+Just note that the important point in this case is to grab the build pipeline artifact that was generated in the last build pipeline and deploy it automatically into the QA environments by enabling CD (Continuos Deployment) in Azure DevOps. Very easy to do.
+
+**Azure DevOps Release Pipeline Definition (Edit)**
+![Tests in Visual Studio](images/azure-devops-release-pipeline-definition.png)
+
+Then, if you drill-down into the QA job and its deployment tasks you can see how the deployment to Azure App Service is performed.
+
+I deploy to two different Azure App Services since .NET Core supports both:
+
+- Linux Azure App Service
+- Windows Azure App Service
+
+**Deployment Tasks to Azure App Service**
+![Tests in Visual Studio](images/azure-devops-app-service-deployment-tasks.png)
+
+You can investigate these real deployments live in my READ-ONLY Azure DevOps project:
+
+- [Release Pipelines for ML model in WebAPI](https://dev.azure.com/mlnetsamples/MLNETWebAPISample/_release?view=mine&definitionId=1)
 
 
 # Get started with ML.NET 1.0!
