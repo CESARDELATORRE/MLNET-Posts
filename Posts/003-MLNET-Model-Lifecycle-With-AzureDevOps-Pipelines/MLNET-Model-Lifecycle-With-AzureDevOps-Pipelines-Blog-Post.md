@@ -22,7 +22,7 @@ In short, the ML model lifecycle process must be part of the application’s Con
 
 **DISCLAIMER**: *This blog post explaines a simple approach you can take for just getting started with ML.NET models lifecycle by using Azure DevOps CI/CD pipelines. However, there are important areas that would need to be addressed for a real production DevOps workflow targeting ML models trained with large datasets such as:* 
     
-*1. Training the model in specialied environments (dedicated VMs or through Azure ML)* 
+*1. Training the model in specialized environments (dedicated VMs or through Azure ML)* 
     
 *2. Training with those large datasets placed on high capacity infrastructure such as Azure Files, Azure Blobs or even directly from databases (SQL Server, etc.).* 
     
