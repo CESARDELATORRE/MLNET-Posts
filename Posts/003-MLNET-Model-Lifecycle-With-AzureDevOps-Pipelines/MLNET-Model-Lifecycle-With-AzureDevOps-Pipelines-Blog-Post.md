@@ -12,11 +12,23 @@ But when you infuse AI (such as an ML.NET model) into your application, then you
 
 When bringing ML models to production, you need to automate the process to track / version / audit / certify / re-use every asset in your ML model lifecycle along with the end-user application lifecycle.
 
-Basically, you have to extend your *DevOps CI/CD pipelines* (in this case using **Azure DevOps**) to handle not just your end-user application but the ML model generation/traing, model testing/evaluation and automatic model deployment and as in the following workflow illustration:
+Basically, you have to extend your *DevOps CI/CD pipelines* (in this case using **Azure DevOps**) to handle not just your end-user application but the ML model generation/traning, model testing/evaluation and automatic model deployment and as in the following workflow illustration:
 
 ![alt text](images/dev-ops-workflow-with-ml-model.png "Regular DevOps workflow")
 
 In short, the ML model lifecycle process must be part of the application’s Continuous Integration (CI) and Continuous Delivery (CD) pipelines.
+
+---
+
+**DISCLAIMER**: *This blog post explaines a simple approach you can take for just getting started with ML.NET models lifecycle by using Azure DevOps CI/CD pipelines. However, there are important areas that would need to be addressed for a real production DevOps workflow targeting ML models trained with large datasets such as:* 
+    
+*1. Training the model in specialied environments (dedicated VMs or through Azure ML)* 
+    
+*2. Training with those large datasets placed on high capacity infrastructure such as Azure Files, Azure Blobs or even directly from databases (SQL Server, etc.).* 
+    
+*I'm not covering those advanced scenarios in this blog post but while ML.NET is getting more mature in Azure I'll continue writing blog posts about it.*
+
+---
 
 Let’s walk through the diagram above to understand how this integration between the ML model lifecycle and the app development lifecycle can be achieved.
 
@@ -24,29 +36,11 @@ For this common scenario, a starting assumption is that Git is used as your code
 
 In the same way than the app developer makes changes in the application and pushes code to Git and that will trigger builds and applications tests in the CI pipeline and ultimately followed by the application deployment in the CD pipeline, the ML model needs a similar process. 
 
-Any changes made in the training code or equally important changes in traing data, that will trigger the Azure DevOps CI/CD pipeline to compile the trainer app, train a new ML model, run unit tests validating the quality of that ML model, deploy the ML model file into the end-user application and finally followed by the application deployment in the CD pipeline.
-
---------------------------
---------------------------
-
-If the dataset to be used to train the model is a small dataset file (i.e. less than 100Mb file), you could push that dataset file directly into Git and that will trigger the CI/CD pipelines.
-
-If the dataset you need to use for training is significantly large and you have those datasets in a different infrastructure such as Azure Files, you could set other specific triggers to execute both model retraining and application deployment steps. 
-
---------------------------
---------------------------
+Any changes made in the training code or changes in training data will trigger the Azure DevOps CI build pipeline to compile the trainer app, train a new ML model, run unit tests validating the quality of that ML model, deploy the ML model file into the end-user application and finally end up by deploying the application through the CD release pipeline.
 
 You retain full control over the ML model training. You can continue to write and train models in your favorite  environment when developing or experimenting (data wrangling, feature extraction, and algorithm/trainer). Then, you get to decide when to refresh the data or change the training code by pushing into Git to trigger the 'official' training of the ML model to be deployed into the end-user application. 
 
 At the same time, you can sleep comfortably knowing that any changes you commit will pass through the required unit, integration testing, and optional human approval steps (releases to production from Azure DevOps Release Manager) for the overall application.
-
---------------------------
---------------------------
-
-Depending on the end-user application architecture (monolithic vs. microservices) the deployment to be done can be different. In a monolithic architecture you might need to re-deploy the whole app (let's say a monolithic web app deployed into Azure App Service) while in a microservices app you could just deploy a single microservice/container running the ML model into the existing microservices app already deployed.
-
---------------------------
---------------------------
 
 # The sample ML model and sample ASP.NET Core WebAPI service for this blog post
 
@@ -453,6 +447,10 @@ For additional info on pipeline artifacts and its relationship with *Release Pip
 
 # Release Pipelines and CD (Continuous Deployment)
 
+Depending on the end-user application architecture (monolithic vs. microservices) the deployment to be done can be different. In a monolithic architecture you might need to re-deploy the whole app (let's say a monolithic web app deployed into Azure App Service) while in a microservices app you could just deploy a single microservice/container running the ML model into the existing microservices app already deployed.
+
+In regards Azure and specific deployment platforms, for monolithic web apps, monolithic services and simple N-Tier apps, I'd recommend to deploy into Azure App Service. Whereas if you have a microservices app based on containers I'd recommend to deploy into AKS (Azure Kubernetes Service).
+
 The Release Pipeline in this example deploys the WebAPI into **Azure App Service**. That is dealing only with the final end-user application (in this case the ASP.NET Core WebAPI service) being deployed into QA/Production environments in Azure. 
 
 Therefore, since in this case there's nothing special about ML (Machine Learning) I'm just showcasing it with a few screenshots.
@@ -479,21 +477,33 @@ You can investigate these real deployments live in my READ-ONLY Azure DevOps pro
 
 # Trigger the CI/CD pipelines to train/build/deploy a new ML Model by simply providing new data 
 
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
-TBD
+If the training dataset to be used to train the model is a small dataset file (i.e. less than 100Mb file), you can push that dataset file directly into GitHub (See [File size limits in GitHub](https://help.github.com/en/articles/conditions-for-large-files)) and that will trigger the CI/CD pipelines and therefore train a new model and deploy it. This simple approach is what the explained Azure DevOps pipeline in this blog post does since it is configured for CI triggered by GitHub pushes, as shown in the following image:
 
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+![Triggering pipelines by pushing a dataset file in Git](images/dataset-triggers-ci-model-training.png)
+
+As soon as I update/push the training dataset file, a new build pipeline is run like in the following screenshot:
+
+![Azure DevOps Triggering pipeline](images/azure-devops-dataset-triggers-pipeline.png)
+
+If you drill-down into that build when it finishes you can confirm that a new model was trained plus it passed the required quality tests:
+
+![Azure DevOps Succesful pipeline](images/azure-devops-pipeline-succesful-run.png)
+
+*NOTE: If the dataset you need to use for training is significantly large (at least larger than 100 MB) and you have those datasets in a different infrastructure such as Azure Files, you could set other different triggers to execute both model re-training and application deployment steps, but the infrastructure setup will need to be more advanced.* 
 
 
-# Try/stop the CI/CD pipelines with "bad data" that shouldn't be used to generate an ML  model
+# Stop the CI build pipeline with tests that won't pass when "bad data" for training a model that doesn't achieve good quality
 
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+In the GitHub repo I'm also providing a modified dataset that is holding wrong data, in purpose, as you can see below:
 
-TBD
+![Dataset files folder](images/datasets-folder.png)
 
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+So, if you delete the current `yelp_labelled.tsv` file, then rename the `yelp_labelled-WRONG.tsv` to `yelp_labelled.tsv` and commit/push into Github, you will see how a new pipeline execution is triggered, but in this case, you catch the issues with that data because the model doesn't pass the quality tests that were implemented, as in the following image:
 
+![Test Errors due to bad data](images/azure-devops-tests-failed-due-to-dataset.png)
+
+In this case I modified most rows so the label was the opposite as expected, but it could have been that just a subset of the dataset was wrong and only certain tests didn't pass, etc.
 
 # Additional space for improvements
 
@@ -501,12 +511,10 @@ These Azure DevOps pipelines including the ML.NET model lifecycle is a simplifie
 
 - Load training data from larger files in Azure Files instead of small/medium dataset files in GitHub
 - Load training data from a SQL/relational database in Azure
-- ML Model Versioning: Set a version per each model created and decouple the ML lifecycle from the application lifecycle.
+- ML Model Versioning: Set a version per each model created and decouple the ML model lifecycle from the end-user application lifecycle.
 - Integration with Azure ML and MLFlow  
 
 I might write additional Blog Posts on those topics extending the working areas started from this current blog post towards new possibilities for more advanced scenarios.
-
-
 
 # Get started with ML.NET 1.0!
 
