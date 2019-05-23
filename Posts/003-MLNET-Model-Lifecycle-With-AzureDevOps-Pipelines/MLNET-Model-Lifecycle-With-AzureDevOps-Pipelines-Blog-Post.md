@@ -6,13 +6,13 @@ As a developer or software architect, you are focused on the application lifecyc
 
 ![alt text](images/dev-ops-workflow.png "Regular DevOps workflow")
 
-But when you infuse AI (such as an ML.NET model) into your application, then your application lifecycle needs to be extended so it embraces the additional 'Machine Learning Model Lifecycle'.
+When you infuse AI (such as an ML.NET model) into your application, then your application lifecycle needs to be extended so it additionally embraces the 'Machine Learning Model Lifecycle'.
 
 # Extending Azure DevOps CI/CD pipelines with the ML Model lifecycle
 
-When bringing ML models to production, you need to automate the process to track / version / audit / certify / re-use every asset in your ML model lifecycle along with the end-user application lifecycle.
+When deploying ML models to production, you need to automate the process to track,  version, audit,  certify and re-use every asset in your ML model lifecycle along with the end-user application lifecycle.
 
-Basically, you have to extend your *DevOps CI/CD pipelines* (in this case using **Azure DevOps**) to handle not just your end-user application but the ML model generation/traning, model testing/evaluation and automatic model deployment and as in the following workflow illustration:
+Essentially, you have to extend your *DevOps CI/CD pipelines* (in this case using **Azure DevOps**) to handle not just your end-user application but also the ML model generation, traning, testing, evaluation and automatic deployment as detailed in the following workflow illustration:
 
 ![alt text](images/dev-ops-workflow-with-ml-model.png "Regular DevOps workflow")
 
@@ -20,13 +20,13 @@ In short, the ML model lifecycle process must be part of the application’s Con
 
 ---
 
-**DISCLAIMER**: *This blog post explaines a simple approach you can take for just getting started with ML.NET models lifecycle by using Azure DevOps CI/CD pipelines. However, there are important areas that would need to be addressed for a real production DevOps workflow targeting ML models trained with large datasets such as:* 
+**DISCLAIMER**: *This blog post explains a simple approach you can take for just getting started with ML.NET models lifecycle by using Azure DevOps CI/CD pipelines. However, there are important areas that would need to be addressed for a real production DevOps workflow targeting ML models trained with large datasets such as:* 
     
 *1. Training the model in specialized environments (dedicated VMs or through Azure ML)* 
     
-*2. Training with those large datasets placed on high capacity infrastructure such as Azure Files, Azure Blobs or even directly from databases (SQL Server, etc.).* 
+*2. Training with large datasets stored in high capacity infrastructure such as Azure Files, Azure Blobs or even directly from databases (SQL Server, etc.).* 
     
-*I'm not covering those advanced scenarios in this blog post but while ML.NET is getting more mature in Azure I'll continue writing blog posts about it.*
+*I'm not covering those advanced scenarios in this blog post but as ML.NET matures on Azure, I'll continue to write blog posts about it.*
 
 ---
 
@@ -34,7 +34,7 @@ Let’s walk through the diagram above to understand how this integration betwee
 
 For this common scenario, a starting assumption is that Git is used as your code repository, but it could be any other source code management platform. 
 
-In the same way than the app developer makes changes in the application and pushes code to Git and that will trigger builds and applications tests in the CI pipeline and ultimately followed by the application deployment in the CD pipeline, the ML model needs a similar process. 
+In the same way that the app developer makes changes in an application, pushes code to Git to trigger builds and application tests in the CI pipeline, followed by the application deployment in the CD pipeline, the ML application needs a similar process.
 
 Any changes made in the training code or changes in training data will trigger the Azure DevOps CI build pipeline to compile the trainer app, train a new ML model, run unit tests validating the quality of that ML model, deploy the ML model file into the end-user application and finally end up by deploying the application through the CD release pipeline.
 
