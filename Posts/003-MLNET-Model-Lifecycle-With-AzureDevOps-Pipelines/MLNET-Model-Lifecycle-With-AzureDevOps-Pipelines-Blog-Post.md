@@ -574,9 +574,16 @@ Commit/push the changes into the GitHub repo and that should have triggered a ne
 
 ![Azure Storage Explorer screenshot](images/azure-devops-pipeline-large-dataset-training-from-azure-files.png)
 
-Of course, this time, since the dataset is larger, it'll take much more time to train.
-In fact, in most of the cases except when doing a proof of concept, **you should not use the built-in Azure DevOps built-in agents for training an ML model but provision a custom agent based on a more powerful VM** with dedicated processor, more memory, etc. or in the future, when supported, train on a connected Azure ML workspace  - This is suggested as well in the next section.
+**IMPORTANT:** Of course, this time, since the dataset is larger, it'll take much more time to train.
+In fact, in most of the cases except when doing a proof of concept, **you should not use the Azure DevOps 'Microsoft-hosted agents' for training an ML model because training a model is an expensive operation and in most of the cases you will reach the 'Microsoft-hosted agents' timeout. Instead, you should provision and use a 'Self-hosted' Windows or Linux agent based on a more powerful VM** with dedicated processor, more memory, etc. so the model's training time will be shorter and you won't reach timeouts.
 
+Here you can see further info on slef-hosted agents for Azure DevOps using your own VMs:
+
+[How to provision and use a Self-hosted Windows agent](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-windows?view=azure-devops)
+
+[How to provision and use a Self-hosted Linux agent](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux?view=azure-devops)
+
+In the future, ML.NET will also support to train on a connected Azure ML workspace  - This is suggested as an improvement in the next section, as well.
 
 # Additional areas for improvements
 
