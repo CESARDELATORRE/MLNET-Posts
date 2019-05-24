@@ -18,15 +18,16 @@ Essentially, you have to extend your *DevOps CI/CD pipelines* (in this case usin
 
 In short, the ML model lifecycle process must be part of the application’s Continuous Integration (CI) and Continuous Delivery (CD) pipelines.
 
+
 ---
 
-**DISCLAIMER**: *This blog post explains a simple approach you can take for just getting started with ML.NET models lifecycle by using Azure DevOps CI/CD pipelines. However, there are important areas that would need to be addressed for a real production DevOps workflow targeting ML models trained with large datasets such as:* 
+**NOTE**: *This blog post explains a simple approach you can take for just getting started with ML.NET models lifecycle by using Azure DevOps CI/CD pipelines. However, there are important areas that would need to be addressed for a real production DevOps workflow targeting ML models trained with large datasets such as:* 
     
-*1. Training the model in specialized environments (dedicated VMs or through Azure ML)* 
+*1. Training the model in specialized environments (dedicated VMs, dedicated self-hosted Azure DevOps Agents  and/or through Azure ML)* 
     
-*2. Training with large datasets stored in high capacity infrastructure such as Azure Files, Azure Blobs or even directly from databases (SQL Server, etc.).* 
+*2. Versioning dataset files and models  
     
-*I'm not covering those advanced scenarios in this blog post but as ML.NET matures on Azure, I'll continue to write blog posts about it.*
+*I'm not covering those advanced scenarios in this blog post but those points are mentioned in further details as areas of improvement at the end of the blog post plus I'll continue writing blog posts about it in the future.*
 
 ---
 
@@ -307,7 +308,7 @@ This is probably the most important and interesting test since you can say *"Fai
 
 ```csharp
 [Test]
-public void TestAccuracyHigherThan60()
+public void TestAccuracyHigherThan80()
 {
     Console.WriteLine("===== Evaluating Model's accuracy with Evaluation/Test dataset =====");
             
@@ -505,14 +506,82 @@ So, if you delete the current `yelp_labelled.tsv` file, then rename the `yelp_la
 
 In this case I modified most rows so the label was the opposite as expected, but it could have been that just a subset of the dataset was wrong and only certain tests didn't pass, etc.
 
-# Additional space for improvements
+# Training with large dataset files placed in Azure Files shares
+
+As mentioned, if you train with dataset files uploaded into GitHub, the maximum size of the file is kind of small (100 MB). When creating production-ready models you usually need to train with much larger datasets. 
+
+For such scenarios, one of the simples way to do it from Azure DevOps is to upload your large datasets into [Azure Files](https://azure.microsoft.com/en-us/services/storage/files/), as shown in the image below:
+
+![Azure Storage Explorer screenshot](images/dataset-in-azure-files-model-training.png)
+
+Then you map a unit drive from the Azure DevOps pipeline pointing to the Azure Files share and specify to use that path in the trainer console app, as in the following steps:
+
+**1. Create an Azure File account in Azure**
+
+- You can follow these simple steps in order to [create an Azure File storage share](https://docs.microsoft.com/en-us/azure/storage/files/storage-how-to-create-premium-fileshare).
+
+**2. Upload dataset files into your Azure File share**
+
+Once you have the share ready, you can manually upload any dataset file with Azure Storage Explorer tool, like in the following screenshot:
+
+![Azure Storage Explorer screenshot](images/azure-storage-explorer-screenshot.png)
+
+You could instead upload files in an automated way through many other tools such as the ones explained in this doc:
+
+- [How to deploy Azure Files](https://docs.microsoft.com/en-us/azure/storage/files/storage-files-deployment-guide)
+
+**3. Map a unit drive to the Azure Files share**
+
+From the *Azure Storage Explorer* tool, click on the 'Connect VM' button and copy the command to run from a console app or script in order to map a unit drive (such as X:) towards that shared folder.
+
+After selecting the unit drive letter, it could be something like the following:
+
+```
+net use X: \\yourfilestorage.file.core.windows.net\datasets /u:yourfilestorage qwertyxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-----YOUR-KEY -------xxxxxxxxxxxxxxxxxxxxxxxxxbqFbNA==
+```
+
+*(Optional)* Test the command from any VM running in Azure (run it on the command-prompt) so you confirm you can see that content as a mapped drive.
+
+NOTE: You can also map to an Azure File share from Linux, with a different command as explained in the article [Use Azure Files with Linux](https://docs.microsoft.com/en-us/azure/storage/files/storage-how-to-use-files-linux)
+
+**3. Update the code in the trainer console app so it uses the new share folder unit drive (X:)**
+
+There are two path variables in the trainer console app you need to update. Search for `string DATA_FILEPATH` and update the two .cs files as the following:
+
+```csharp
+private static string TRAIN_DATA_FILEPATH = @"X:\\twitter\\Twittersentiment-1Million.tsv";
+```
+
+*NOTE: Again, if using Linux, the path would simply point to a specific mapped folder.*
+
+**4. Add a new Azure DevOps task to map the unit drive to the shared folder in Azure Files**
+
+At the beginning of your Azure DevOps build .YAML pipeline, add a task similar to the following:
+
+```yaml
+- script: 'net use X: \\yourfilestorage.file.core.windows.net\datasets /u:yourfilestorage qwertyxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-----YOUR-KEY -------xxxxxxxxxxxxxxxxxxxxxxxxxbqFbNA=='
+  displayName: 'Map disk drive to Azure Files share folder'
+```
+
+Commit/push the changes into the GitHub repo and that should have triggered a new build which will be training the model from the remote "large" dataset placed in Azure DevOps Files share, as in the following screenshot:
+
+
+![Azure Storage Explorer screenshot](images/azure-devops-pipeline-large-dataset-training-from-azure-files.png)
+
+Of course, this time, since the dataset is larger, it'll take much more time to train.
+In fact, in most of the cases except when doing a proof of concept, **you should not use the built-in Azure DevOps built-in agents for training an ML model but provision a custom agent based on a more powerful VM** with dedicated processor, more memory, etc. or in the future, when supported, train on a connected Azure ML workspace  - This is suggested as well in the next section.
+
+
+# Additional areas for improvements
 
 These Azure DevOps pipelines including the ML.NET model lifecycle is a simplified and minimum baseline you can use to get started. However, there are multiple areas of improvement here when dealing with more advanced scenarios:
 
-- Load training data from larger files in Azure Files instead of small/medium dataset files in GitHub
+- Versioning datasets: In cases where the dataset is small (up to 100 MB), storing it in Git as shown in this blog post might make sense. For medium/large datasets though, other alternatives like [Git Large File Storage (LFS)](https://git-lfs.github.com/) (up to a couple GB in dataset file size) or [Data Version Control (DVC)](https://dvc.org/) (Version Control System for Machine Learning Projects that can use Azure Blob Storage under the covers, so currently up to 5 TB in dataset file size) can be considered.   
+- Load and train directly from very large dataset files (hundreds of GB or around 1TB) available in the network through [Azure Files](https://docs.microsoft.com/en-us/azure/storage/files/storage-files-introduction) and/or Azure Blobs.
 - Load training data from a SQL/relational database in Azure
 - ML Model Versioning: Set a version per each model created and decouple the ML model lifecycle from the end-user application lifecycle.
-- Integration with Azure ML and MLFlow  
+- DevOps workflow Scenarios: Additional DevOps scenarios where the responsibilities are distributed across different individuals / teams, one targeting the end-user app, another targeting the ML model.
+- Integration with *Azure ML* and *MLFlow* (In the roadmap for ML.NET and ML.NET AutoML). Usage of Azure ML Datasets, model registry, model versioning, training in the cloud, model deployment in the cloud, etc.
 
 I might write additional Blog Posts on those topics extending the working areas started from this current blog post towards new possibilities for more advanced scenarios.
 
