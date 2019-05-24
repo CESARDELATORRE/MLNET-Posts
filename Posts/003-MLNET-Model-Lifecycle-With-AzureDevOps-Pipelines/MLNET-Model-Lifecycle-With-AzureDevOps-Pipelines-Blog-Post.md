@@ -556,10 +556,16 @@ private static string TRAIN_DATA_FILEPATH = @"X:\\twitter\\Twittersentiment-1Mil
 
 **4. Add a new Azure DevOps task to map the unit drive to the shared folder in Azure Files**
 
-At the beginning of your Azure DevOps build .YAML pipeline, add a task similar to the following:
+In Azure DevOps, create a secret variable in the pipeline editor using the web interface such as the following variable:
+
+mlnetfilestorage.key = qwertyxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-----YOUR-KEY -------xxxxxxxxxxxxxxxxxxxxxxxxxbqFbNA==
+
+And set it as 'secret' by clicking on the small lock. For more info check this doc about [Azure DevOps pipeline secret variables](https://docs.microsoft.com/en-us/azure/devops/pipelines/process/variables?view=azure-devops&tabs=yaml%2Cbatch#secret-variables)
+
+Then, at the beginning of your Azure DevOps build .YAML pipeline add a task similar to the following:
 
 ```yaml
-- script: 'net use X: \\yourfilestorage.file.core.windows.net\datasets /u:yourfilestorage qwertyxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-----YOUR-KEY -------xxxxxxxxxxxxxxxxxxxxxxxxxbqFbNA=='
+- script: 'net use X: \\mlnetfilestorage.file.core.windows.net\datasets /u:mlnetfilestorage $(mlnetfilestorage.key)'
   displayName: 'Map disk drive to Azure Files share folder'
 ```
 
