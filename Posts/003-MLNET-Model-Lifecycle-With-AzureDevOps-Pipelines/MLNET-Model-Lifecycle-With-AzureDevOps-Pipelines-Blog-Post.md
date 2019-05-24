@@ -546,13 +546,13 @@ NOTE: You can also map to an Azure File share from Linux, with a different comma
 
 **3. Update the code in the trainer console app so it uses the new share folder unit drive (X:)**
 
-There are two path variables in the trainer console app you need to update. Search for `string DATA_FILEPATH` and update the two .cs files as the following:
+There is one path variable in the trainer console app you need to update. Search for `private static string DATA_FILEPATH` in the ModelBuilder.cs class and update it so it uses a dataset file hold in the Azure File share:
 
 ```csharp
 private static string TRAIN_DATA_FILEPATH = @"X:\\twitter\\Twittersentiment-1Million.tsv";
 ```
 
-*NOTE: Again, if using Linux, the path would simply point to a specific mapped folder.*
+*NOTE: Again, if using Linux, the path would simply point to a specific mapped folder instead of using a unit drive such as 'X:'.*
 
 **4. Add a new Azure DevOps task to map the unit drive to the shared folder in Azure Files**
 
