@@ -18,19 +18,6 @@ Essentially, you have to extend your *DevOps CI/CD pipelines* (in this case usin
 
 In short, the ML model lifecycle process must be part of the application’s Continuous Integration (CI) and Continuous Delivery (CD) pipelines.
 
-
----
-
-**NOTE**: *This blog post explains a simple approach you can take for just getting started with ML.NET models lifecycle by using Azure DevOps CI/CD pipelines. However, there are important areas that would need to be addressed for a real production DevOps workflow targeting ML models trained with large datasets such as:* 
-    
-*1. Training the model in specialized environments (dedicated VMs, dedicated self-hosted Azure DevOps Agents  and/or through Azure ML)* 
-    
-*2. Versioning dataset files and models  
-    
-*I'm not covering those advanced scenarios in this blog post but those points are mentioned in further details as areas of improvement at the end of the blog post plus I'll continue writing blog posts about it in the future.*
-
----
-
 Let’s walk through the diagram above to understand how this integration between the ML model lifecycle and the app development lifecycle can be achieved.
 
 For this common scenario, a starting assumption is that Git is used as your code repository, but it could be any other source code management platform. 
@@ -39,9 +26,11 @@ In the same way that the app developer makes changes in an application, pushes c
 
 Any changes made in the training code or changes in training data will trigger the Azure DevOps CI build pipeline to compile the trainer app, train a new ML model, run unit tests validating the quality of that ML model, deploy the ML model file into the end-user application and finally end up by deploying the application through the CD release pipeline.
 
-You retain full control over the ML model training. You can continue to write and train models in your favorite  environment when developing or experimenting (data wrangling, feature extraction, and algorithm/trainer). Then, you get to decide when to refresh the data or change the training code by pushing into Git to trigger the 'official' training of the ML model to be deployed into the end-user application. 
+There are multiple choices for where your dataset can be stored for training (GitHub, Azure Files, etc.), as explained later in this blog post.
 
-At the same time, you can sleep comfortably knowing that any changes you commit will pass through the required unit, integration testing, and optional human approval steps (releases to production from Azure DevOps Release Manager) for the overall application.
+You retain full control over the ML model training. You can continue to write and train models in your favorite environment when developing or experimenting (data wrangling, feature extraction, and algorithm/trainer). Then, you get to decide when to refresh the data or change the training code by pushing into Git to trigger the 'official' training of the ML model to be deployed into the end-user application. 
+
+At the same time, you can sleep comfortably knowing that any changes you commit will pass through the required unit testing, integration testing, and optional human approval steps (releases to production from Azure DevOps Release Manager) for the overall application.
 
 # The sample ML model and sample ASP.NET Core WebAPI service for this blog post
 
@@ -577,24 +566,59 @@ Commit/push the changes into the GitHub repo and that should have triggered a ne
 **IMPORTANT:** Of course, this time, since the dataset is larger, it'll take much more time to train.
 In fact, in most of the cases except when doing a proof of concept, **you should not use the Azure DevOps 'Microsoft-hosted agents' for training an ML model because training a model is an expensive operation and in most of the cases you will reach the 'Microsoft-hosted agents' timeout. Instead, you should provision and use a 'Self-hosted' Windows or Linux agent based on a more powerful VM** with dedicated processor, more memory, etc. so the model's training time will be shorter and you won't reach timeouts.
 
-Here you can see further info on slef-hosted agents for Azure DevOps using your own VMs:
+# Training in your own self-hosted agent (Azure VM)
 
-[How to provision and use a Self-hosted Windows agent](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-windows?view=azure-devops)
+As mentioned, as soon as your dataset is something more than a small proof of concept, you need to train in a more powerful machine such as an Azure VM configured to run as an Azure DevOps self-hosted agent, as visualized in the following image:
 
-[How to provision and use a Self-hosted Linux agent](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux?view=azure-devops)
+![Using an Azure DevOps Self-hosted agent](images/dataset-in-azure-files-model-training-on-self-hosted-VM.png)
 
-In the future, ML.NET will also support to train on a connected Azure ML workspace  - This is suggested as an improvement in the next section, as well.
+For the example in the blog post, I created a 'Windows 2019 VM' in Azure with the following characteristics:
 
-# Additional areas for improvements
+- *Operating system: Windows (Windows Server 2019 Datacenter)*
+
+- *Size: Standard DS3 v2 (4 vcpus, 14 GiB memory)*
+
+Then, you need to install the base-software needed for training, in this case I just need the '.NET Core 2.2 SDK', although I also installed Visual Studio 2019 so I can also use this VM as a tes/dev machine.
+
+Finally, you also need to install the Azure DevOps Agent so you can connect this VM as an Azure DevOps Agent. 
+
+Here you can see how to install a self-hosted agent using your own VMs:
+
+- [How to provision and use a Self-hosted Windows agent](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-windows?view=azure-devops)
+
+- [How to provision and use a Self-hosted Linux agent](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux?view=azure-devops)
+
+Once the agent is installed, then you can see it from Azure DevOps, in my case within the 'default pool':
+
+![Azure DevOps Self-hosted agent screenshot](images/self-hosted-agent-in-azure-devops.png)
+
+Once the self-hosted agent (VM) is ready, you can specify to use that VM for running the build pipelines in the pool task within the .YAML Azure pipeline file: 
+
+```yaml
+# Custom VM self-hosted agent
+pool:
+  name: Default
+```
+
+When training the ML model (with the "larger" dataset with 1 million rows from Azure Files) in the custom self-hosted VM it took around 9 minutes, compared to 1 hour before getting a time-out (it didn't finished training) when using a 'built-in Microsoft-agent' which are not powerful enough for training ML models other than a small dataset for a proof of concept.
+
+
+![Training from Self-hosted agent VM screenshot](images/azure-devops-pipeline-large-dataset-training-from-self-hosted-VM-and-azure-files.png)
+
+# Additional areas for improvement
 
 These Azure DevOps pipelines including the ML.NET model lifecycle is a simplified and minimum baseline you can use to get started. However, there are multiple areas of improvement here when dealing with more advanced scenarios:
 
-- Versioning datasets: In cases where the dataset is small (up to 100 MB), storing it in Git as shown in this blog post might make sense. For medium/large datasets though, other alternatives like [Git Large File Storage (LFS)](https://git-lfs.github.com/) (up to a couple GB in dataset file size) or [Data Version Control (DVC)](https://dvc.org/) (Version Control System for Machine Learning Projects that can use Azure Blob Storage under the covers, so currently up to 5 TB in dataset file size) can be considered.   
-- Load and train directly from very large dataset files (hundreds of GB or around 1TB) available in the network through [Azure Files](https://docs.microsoft.com/en-us/azure/storage/files/storage-files-introduction) and/or Azure Blobs.
-- Load training data from a SQL/relational database in Azure
-- ML Model Versioning: Set a version per each model created and decouple the ML model lifecycle from the end-user application lifecycle.
-- DevOps workflow Scenarios: Additional DevOps scenarios where the responsibilities are distributed across different individuals / teams, one targeting the end-user app, another targeting the ML model.
-- Integration with *Azure ML* and *MLFlow* (In the roadmap for ML.NET and ML.NET AutoML). Usage of Azure ML Datasets, model registry, model versioning, training in the cloud, model deployment in the cloud, etc.
+- **Versioning datasets:** In cases where the dataset is small (up to 100 MB), storing it in Git as shown in this blog post might make sense. For medium/large datasets though, other alternatives like [Git Large File Storage (LFS)](https://git-lfs.github.com/) (up to a couple GB in dataset file size) or [Data Version Control (DVC)](https://dvc.org/) (Version Control System for Machine Learning Projects that can use Azure Blob Storage under the covers, so currently up to 5 TB in dataset file size) can be considered.   
+
+- **Databases as training data:** Load training data from a SQL/relational database in Azure.
+
+- **DevOps workflow Scenarios:** Additional DevOps scenarios where the responsibilities are distributed across different individuals / teams, one targeting the end-user app, another targeting the ML model.
+
+- **ML Model Versioning:** In the Azure DevOps pipelines explained in this blog post the ML model has no version by itself but the version would be in the deployment WebAPI service. A more elaborated and decoupled approach would be to be able to version the ML model files themselves. You would set a version per each ML model created and decouple the ML model lifecycle from the end-user application lifecycle. This will be easily be done with Azure MLOps and MLFlow when supported for ML.NET models.
+
+- **Integration with *Azure ML* and *MLFlow*:** (In the roadmap for ML.NET and ML.NET AutoML). Usage of Azure ML Datasets, model registry, model versioning, training in the cloud, model deployment in the cloud, etc. For [ML.NET, AutoML and MLFlow check this intesting blog post](http://luisquintanilla.me/2019/05/09/ml-lifecycle-management-mlflow-automated-ml-net/).
+
 
 I might write additional Blog Posts on those topics extending the working areas started from this current blog post towards new possibilities for more advanced scenarios.
 
