@@ -32,7 +32,15 @@ You retain full control over the ML model training. You can continue to write an
 
 At the same time, you can sleep comfortably knowing that any changes you commit will pass through the required unit testing, integration testing, and optional human approval steps (releases to production from Azure DevOps Release Manager) for the overall application.
 
-# The sample ML model and sample ASP.NET Core WebAPI service for this blog post
+# Show me the code!
+
+The ML model pipeline code, trainer app, tests project and Azure DevOps pipeline .YAML file is available at this Github repo:
+
+- https://github.com/CESARDELATORRE/MLNETSENTIMENTCICD 
+
+In the following section the code projects are explained.
+
+# The sample ML model and ASP.NET Core WebAPI service for this blog post
 
 In order to make this blog post simple and mostly focus on DevOps CI/CD, the [ML.NET](https://dotnet.microsoft.com/apps/machinelearning-ai/ml-dotnet) model and sample app/service to be deployed must be kept simple while with enough implementation so it is useful.
 
