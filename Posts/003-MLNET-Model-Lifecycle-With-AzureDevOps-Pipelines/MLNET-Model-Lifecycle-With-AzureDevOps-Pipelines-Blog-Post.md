@@ -173,6 +173,9 @@ steps:
     targetPath: '$(Build.ArtifactStagingDirectory)'
 ```
 
+This build pipeline can be seen (read-only) from this Azure DevOps URL:
+https://dev.azure.com/mlnetsamples/MLNETWebAPISample/_build?definitionId=12  
+
 Initially, all the .YAML code can look a bit overwhelming compared to the traditional VSTS visual tasks, but once you know the tasks you are running, the .YAML approach is much more direct and in a single scan/read you see everything the pipeline is running. On the other hand, if using the visual tasks you'd need to enter on each task and review all its parameters sometimes in hidden/closed tabs, etc.  Really, once you are used to use it, you will prefer the .YAML approach not counting the best benefit which is that you are checking the YAML file in the same repo than its related source code! :)
 
 Let's drill down on each task.
