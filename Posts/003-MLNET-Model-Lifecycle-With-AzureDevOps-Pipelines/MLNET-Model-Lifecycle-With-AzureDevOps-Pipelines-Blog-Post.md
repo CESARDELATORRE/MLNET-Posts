@@ -635,7 +635,7 @@ I might write additional Blog Posts on those topics extending the working areas 
 
 # Additional references
 
-[Paper 'CONTINUOUS INTEGRATION OF MACHINE LEARNING MODELS WITH EASE.ML/CI':](https://www.sysml.cc/doc/2019/162.pdf)
+- [Paper 'CONTINUOUS INTEGRATION OF MACHINE LEARNING MODELS WITH EASE.ML/CI':](https://www.sysml.cc/doc/2019/162.pdf)
 
 # Get started with ML.NET 1.0!
 
