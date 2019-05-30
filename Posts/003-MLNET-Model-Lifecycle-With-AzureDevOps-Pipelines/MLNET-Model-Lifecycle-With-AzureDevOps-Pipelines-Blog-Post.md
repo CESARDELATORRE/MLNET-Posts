@@ -633,6 +633,10 @@ These Azure DevOps pipelines including the ML.NET model lifecycle is a simplifie
 
 I might write additional Blog Posts on those topics extending the working areas started from this current blog post towards new possibilities for more advanced scenarios.
 
+# Additional references
+
+[Paper 'CONTINUOUS INTEGRATION OF MACHINE LEARNING MODELS WITH EASE.ML/CI':](https://www.sysml.cc/doc/2019/162.pdf)
+
 # Get started with ML.NET 1.0!
 
 ![alt text](images/get-started-rocket.png "Get started icon")
