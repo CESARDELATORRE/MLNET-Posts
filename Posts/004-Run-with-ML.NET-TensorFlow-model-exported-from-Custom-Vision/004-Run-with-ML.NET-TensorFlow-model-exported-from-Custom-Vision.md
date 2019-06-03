@@ -102,8 +102,7 @@ private ITransformer SetupMlnetModel(string tensorFlowModelFilePath)
 
 As mentioned, this code has to be run just once so you define the ML.NET model and how it has to load the TensorFlow model plus what transformations need the images to process.
 
-The TensorFlow model's settings are defined in this kind of structures used in the pipeline code above:
-
+The TensorFlow model pipeline above is defined based on the following settings:
 
 ```csharp
 public struct ImageSettings
