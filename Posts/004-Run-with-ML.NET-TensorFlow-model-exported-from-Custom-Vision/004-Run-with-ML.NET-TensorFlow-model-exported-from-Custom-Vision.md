@@ -21,9 +21,9 @@ The answer is: "Of course there are additional approaches!"
 
 You can use **Azure Cognitive Services Custom Vision** to train a TensorFlow model, then export it as a frozen TensorFlow model .pb file and finally run/score that model with ML.NET code in your end-user .NET application.
 
-# The hypothetical business scenario 
+# The hypothetical business scenario for the sample app
 
-The hypothetical business scenario is *pretty similar* to whay Snapchat and Amazon are testing and you can check out [here](https://www.theverge.com/2018/9/24/17896788/snapchat-amazon-shop-photos-partnership).
+The hypothetical business scenario for the sample app in this blog post is *pretty similar* to whay Snapchat and Amazon are testing and you can check out [here](https://www.theverge.com/2018/9/24/17896788/snapchat-amazon-shop-photos-partnership).
 
 Basically, that feature would let users point their Snapchat camera at a physical product to then be redirected to an Amazon pop-up card for that product or something similar (so the user can easily buy what he just saw from a friend, etc.), as in the following image:
 
