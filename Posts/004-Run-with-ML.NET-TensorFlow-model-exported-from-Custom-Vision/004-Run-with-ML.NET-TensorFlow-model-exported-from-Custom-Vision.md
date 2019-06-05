@@ -42,7 +42,6 @@ It can be a desktop app (.NET Framework, WinForms, WPF), a web app (ASP.NET Core
  
 In this case, I'm running/scoring the TensorFlow model on an ASP.NET Core Razor web that is also working as a WebAPI service at the same time (so the service could also be consumed by a remote mobile app). Something like the following simplified scenario architecture:
 
-
 ![Scenario architecture with web app and service](images/scenario-architecture.png)
 
 That TensorFlow .pb model file that you see in the diagram (and the labels.txt codes/Ids) is what you create/train in Azure Cognitive Services Custom Vision then exporte as a frozen TensorFlow model file to be used by ML.NET C# code.
